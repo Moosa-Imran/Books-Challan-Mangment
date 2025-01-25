@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const { ObjectId } = require('mongodb'); 
 const nodemailer = require('nodemailer');;
-const { v4: uuidv4 } = require("uuid");
 const router = express.Router();
 const emailTemplates = require('./emailTemplates');
 const dotenv = require('dotenv');
@@ -132,9 +131,8 @@ router.post('/challans/create', async (req, res) => {
             });
         }
 
-        // Step 2: Generate a unique Challan No using uuid
-        const { v4: uuidv4 } = require('uuid');
-        const challanNo = uuidv4();
+        // Step 2: Generate a unique Challan No with 8-10 digits
+        const challanNo = Math.floor(10000000 + Math.random() * 900000000); // Generates an 8-9 digit number
 
         // Step 3: Create a new challan object
         const challanData = {
@@ -257,7 +255,8 @@ router.get('/challan/:id', isAuthenticated, async (req, res) => {
 
     try {
         // Find the challan by ID
-        const challan = await managmentDb.collection('Challans').findOne({ challanNo: id });
+        const challanNo = Number(id);
+        const challan = await managmentDb.collection('Challans').findOne({ challanNo});
 
         if (!challan) {
             return res.status(404).send('Challan not found');
