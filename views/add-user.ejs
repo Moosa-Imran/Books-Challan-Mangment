@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>Add User</title>
+
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="/asset/admin/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.css">
+  <link rel="stylesheet" href="/asset/admin/css/style.css">
+  <link rel="stylesheet" href="/asset/admin/css/components.css">
+  <link rel="stylesheet" href="/asset/admin/css/custom.css">
+
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="main-wrapper">
+      
+          <!-- Navbar -->
+          <%- include('components/navbar') %>
+          
+          <!-- Sidebar -->
+          <%- include('components/sidebar', { dashboard: false, users: true, payments: false }) %>
+      
+          <div class="main-content">
+            <section class="section">
+              <div class="section-header pl-0 d-flex justify-content-between">
+                <h1 class="pl-0">Add User</h1>
+              </div>
+      
+              <div class="row">
+                <div class="col-12 col-md-12 col-lg-12">
+                  <div class="card">
+                    <div class="card-body">
+
+                      <form>
+                        <!-- Full Name Field -->
+                        <div class="form-group">
+                          <label for="fullName">Full Name</label>
+                          <input type="text" class="form-control" id="fullName" name="fullName" required placeholder="Enter full name">
+                        </div>
+      
+                        <!-- School Name Field -->
+                        <div class="form-group">
+                          <label for="schoolName">School Name</label>
+                          <input type="text" class="form-control" id="schoolName" name="schoolName" required placeholder="Enter school name">
+                        </div>
+      
+                        <!-- Person (Role) Field -->
+                        <div class="form-group">
+                          <label for="person">Role/Person</label>
+                          <select class="form-control" id="person" name="person">
+                            <option value="Principal">Principal</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Staff">Staff</option>
+                          </select>
+                        </div>
+      
+                        <!-- Phone Number Field -->
+                        <div class="form-group">
+                          <label for="phoneNumber">Phone Number</label>
+                          <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required placeholder="Enter phone number">
+                        </div>
+      
+                        <!-- Email Field -->
+                        <div class="form-group">
+                          <label for="email">Email</label>
+                          <input type="email" class="form-control" id="email" name="email" required placeholder="Enter email">
+                        </div>
+
+                        <!-- CNIC -->
+                        <div class="form-group">
+                          <label for="cnic">CNIC</label>
+                          <input type="text" class="form-control" id="cnic" name="cnic" required placeholder="Enter CNIC (e.g., 36302-1234567-1)" pattern="\d{5}-\d{7}-\d{1}">
+                        </div>
+      
+                        <!-- Address Field -->
+                        <div class="form-group">
+                          <label for="address">Address</label>
+                          <textarea style="height: 100px !important;" class="form-control" id="address" name="address" required placeholder="Enter address"></textarea>
+                        </div>
+      
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary">Add User</button>
+                        <a href="/users" class="btn btn-secondary">Cancel</a>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+  <!-- General JS Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/asset/admin/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6/jquery.nicescroll.min.js"></script>
+  <script src="/asset/admin/js/scripts.js"></script>
+
+  <script>
+    $(document).ready(function() {
+        // Form submission event
+        $("form").submit(function(e) {
+            e.preventDefault(); // Prevent the default form submission
+    
+            // Serialize the form data
+            const formData = $(this).serialize();
+    
+            $.ajax({
+                type: "POST",
+                url: "/users/add", // The route that handles adding users
+                data: formData,
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Show success message using Izitoast
+                        iziToast.success({
+                            title: 'Success',
+                            message: response.message,
+                            position: 'topRight', // Set the position to top right
+                        });
+    
+                        // Redirect to users page after 2 seconds
+                        setTimeout(function() {
+                            window.location.href = '/users'; // Adjust the URL if needed
+                        }, 2000);
+                    }
+                },
+                error: function(xhr, status, error) {
+                  if (xhr.responseJSON.status === 'error') {
+                    // Show error message if the request fails
+                    iziToast.error({
+                        title: 'Error',
+                        message: xhr.responseJSON.message,
+                        position: 'topRight',
+                    });
+                  } else {
+                    // Show error message if the request fails
+                    iziToast.error({
+                        title: 'Error',
+                        message: 'Internal server error.',
+                        position: 'topRight',
+                    });
+                  }
+                }
+            });
+        });
+    });
+    </script>
+    
+
+
+</body>
+
+</html>

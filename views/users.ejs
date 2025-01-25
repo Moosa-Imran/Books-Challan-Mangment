@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>All Users</title>
+
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="asset/admin/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.css">
+  <link rel="stylesheet" href="asset/admin/css/style.css">
+  <link rel="stylesheet" href="asset/admin/css/components.css">
+  <link rel="stylesheet" href="asset/admin/css/custom.css">
+
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="main-wrapper">
+    
+          <!-- Navbar -->
+          <%- include('components/navbar') %>
+          <!-- Sidebar -->
+          <%- include('components/sidebar', { dashboard: false, users: true, payments: false }) %>
+    
+          <!-- Main Content -->
+          <div class="main-content">
+            <section class="section">
+              <div class="section-header">
+                <h1>Manage Users</h1>
+              </div>
+    
+              <div class="row">
+                <div class="col-12 col-md-12 col-lg-12">
+                  <div class="card">
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table class="table table-striped" id="usersTable">
+                          <thead>
+                            <tr>
+                              <th>Sl</th>
+                              <th>Full Name</th>
+                              <th>School Name</th>
+                              <th>Person</th>
+                              <th>Phone Number</th>
+                              <th>Email</th>
+                              <th>CNIC</th>
+                              <th>Address</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% users.forEach((user, index) => { %>
+                            <tr>
+                              <td><%= index + 1 %></td>
+                              <td><%= user.fullName %></td>
+                              <td><%= user.schoolName %></td>
+                              <td><%= user.person %></td>
+                              <td><%= user.phoneNumber %></td>
+                              <td><%= user.email %></td>
+                              <td><%= user.cnic %></td>
+                              <td><%= user.address %></td>
+                              <td>
+                                <!-- <a href="/users/edit/<%= user._id %>" class="btn btn-warning">Edit</a> -->
+                                <button id="<%= user._id %>" class="btn btn-danger">Delete</button>
+                              </td>
+                            </tr>
+                            <% }) %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+    
+        </div>
+    </div>
+    
+
+
+  <!-- General JS Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="asset/admin/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6/jquery.nicescroll.min.js"></script>
+  <script src="asset/admin/js/scripts.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      $('#usersTable').on('click', 'span', function() {
+        const userId = $(this).attr('id');
+        $.ajax({
+          url: `/users/delete/${userId}`,
+          method: 'DELETE',
+          success: function(response) {
+            iziToast.success({
+              title: 'Success',
+              message: response.message,
+              position: 'topRight'
+            });
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          },
+          error: function(err) {
+            iziToast.error({
+              title: 'Error',
+              message: err.responseJSON.message,
+              position: 'topRight'
+            });
+          }
+        });
+      });
+    });
+  </script>
+
+
+</body>
+
+</html>

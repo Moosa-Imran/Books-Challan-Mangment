@@ -1,0 +1,71 @@
+<div class="main-sidebar">
+    <aside id="sidebar-wrapper">
+        <div class="sidebar-brand">
+            <a href="/dashboard">My Book Publishers</a>
+        </div>
+
+        <ul class="sidebar-menu">
+            <!-- Dashboard -->
+            <li class="nav-item dropdown <%= dashboard ? 'active' : '' %>">
+                <a href="/dashboard" class="nav-link">
+                    <i data-feather="home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <!-- User Management -->
+            <li class="sidebar-menu-caption">User Management</li>
+            <li class="nav-item dropdown <%= users ? 'active' : '' %>">
+                <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                    <i data-feather="user"></i>
+                    <span>Manage Users</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="nav-link" href="/users">View All Users</a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="/users/add">Add User</a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Payments -->
+            <li class="sidebar-menu-caption">Payment and Payout</li>
+            <li class="nav-item dropdown <%= payments ? 'active' : '' %>">
+                <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                    <i data-feather="database"></i>
+                    <span>Payments</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="nav-link" href="/payments/create">Create Payment</a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="/payments/pending">Pending Payments</a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="/payments/accepted">Accepted Payments</a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Manage Books -->
+            <li class="sidebar-menu-caption">Book Management</li>
+            <li class="nav-item dropdown">
+                <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                    <i data-feather="book"></i>
+                    <span>Manage Books</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="nav-link" href="/books">View All Books</a>
+                    </li>
+                    <li>
+                        <a class="nav-link" href="/books/add">Add New Book</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </aside>
+</div>
