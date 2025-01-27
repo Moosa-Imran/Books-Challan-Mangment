@@ -13,6 +13,57 @@
   <link rel="stylesheet" href="/asset/admin/css/style.css">
   <link rel="stylesheet" href="/asset/admin/css/components.css">
   <link rel="stylesheet" href="/asset/admin/css/custom.css">
+  <style>
+    .payment-type-label {
+      margin-right: 20px;
+      font-weight: 500;
+    }
+
+    .payment-type-radio {
+      margin-right: 10px;
+    }
+
+    #addBook {
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    .form-group label {
+      font-weight: 600;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      padding: 12px 15px;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 8px;
+    }
+
+    .btn-danger {
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    .form-control:focus {
+      box-shadow: none;
+      border-color: #7a4fff;
+    }
+
+    #bookSelection,
+    #selectedBooksTable {
+      display: none;
+    }
+
+    #bookQuantityFields {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -21,49 +72,88 @@
       <!-- Navbar -->
       <%- include('components/navbar') %>
 
-      <!-- Sidebar -->
-      <%- include('components/sidebar', { dashboard: false, users: false, payments: true }) %>
+        <!-- Sidebar -->
+        <%- include('components/sidebar', { dashboard: false, users: false, payments: true }) %>
 
-      <!-- Main Content -->
-      <div class="main-content">
-        <section class="section">
-          <div class="section-header">
-            <h1>Create Payment</h1>
-          </div>
+          <!-- Main Content -->
+          <div class="main-content">
+            <section class="section">
+              <div class="section-header">
+                <h1>Create Payment</h1>
+              </div>
 
-          <div class="row">
-            <div class="col-12 col-md-12 col-lg-12">
-              <div class="card">
-                <div class="card-body">
-                  <form id="createPaymentForm" action="/payments/create" method="POST">
-                    <!-- CNIC Field -->
-                    <div class="form-group">
-                      <label for="cnic">CNIC</label>
-                      <input type="text" class="form-control" id="cnic" name="cnic" required placeholder="Enter CNIC (e.g., 36302-1234567-1)" pattern="\d{5}-\d{7}-\d{1}">
+              <div class="row">
+                <div class="col-12 col-md-12 col-lg-12">
+                  <div class="card">
+                    <div class="card-body">
+                      <form id="createPaymentForm" action="/payments/create" method="POST">
+                        <!-- CNIC Field -->
+                        <div class="form-group">
+                          <label for="cnic">CNIC</label>
+                          <input type="text" class="form-control" id="cnic" name="cnic" required
+                            placeholder="Enter CNIC (e.g., 36302-1234567-1)" pattern="\d{5}-\d{7}-\d{1}">
+                        </div>
+
+                        <!-- Payment Type Selection -->
+                        <div class="form-group">
+                          <label class="payment-type-label">Payment Type</label><br>
+                          <label for="manual" class="payment-type-radio">
+                            <input type="radio" id="manual" name="paymentType" value="manual" checked> Manual
+                          </label>
+                          <label for="create" class="payment-type-radio">
+                            <input type="radio" id="create" name="paymentType" value="create"> Create
+                          </label>
+                        </div>
+
+                        <!-- Amount Field (Hidden by default) -->
+                        <div class="form-group" id="amountField">
+                          <label for="amount">Amount</label>
+                          <input type="number" class="form-control" id="amount" name="amount" placeholder="Enter amount"
+                            min="1">
+                        </div>
+
+                        <!-- Book Selection (Hidden by default) -->
+                        <div class="form-group" id="bookSelection">
+                          <label for="books">Select Books</label>
+                          <select class="form-control" id="books" name="books[]">
+                            <option selected disabled value="">Select Book</option>
+                            <!-- Books will be populated here via AJAX -->
+                          </select>
+                          <div id="bookQuantityFields"></div>
+                          <button type="button" class="btn btn-primary" id="addBook">Add Book</button>
+                        </div>
+
+                        <!-- Table (Initially hidden) -->
+                        <table style="margin-bottom: 3rem;" class="table" id="selectedBooksTable">
+                          <thead>
+                            <tr>
+                              <th>Book Name</th>
+                              <th>Quantity</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <!-- Selected books will appear here -->
+                          </tbody>
+                        </table>
+
+
+                        <!-- Due Date Field -->
+                        <div class="form-group">
+                          <label for="dueDate">Due Date</label>
+                          <input type="date" class="form-control" id="dueDate" name="dueDate" required>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary">Create Payment</button>
+                        <a href="/payments" class="btn btn-secondary">Cancel</a>
+                      </form>
                     </div>
-
-                    <!-- Amount Field -->
-                    <div class="form-group">
-                      <label for="amount">Amount</label>
-                      <input type="number" class="form-control" id="amount" name="amount" required placeholder="Enter amount" min="1">
-                    </div>
-
-                    <!-- Due Date Field -->
-                    <div class="form-group">
-                      <label for="dueDate">Due Date</label>
-                      <input type="date" class="form-control" id="dueDate" name="dueDate" required>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary">Create Payment</button>
-                    <a href="/payments" class="btn btn-secondary">Cancel</a>
-                  </form>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
-        </section>
-      </div>
     </div>
   </div>
 
@@ -81,32 +171,146 @@
       const today = new Date().toISOString().split("T")[0];
       $("#dueDate").attr("min", today);
   
+      // Toggle payment method options
+      $('input[name="paymentType"]').change(function () {
+        if ($(this).val() === 'manual') {
+          $('#amountField').show();
+          $('#bookSelection').hide();
+          $('#selectedBooksTable').hide();
+        } else {
+          $('#amountField').hide();
+          $('#bookSelection').show();
+          $('#selectedBooksTable').show();
+          fetchBooks();
+        }
+      });
+  
+      // Fetch books from the database
+      function fetchBooks() {
+        $.ajax({
+          type: 'GET',
+          url: '/fetchBooks', // This route should return the list of books
+          dataType: 'json',
+          success: function (response) {
+            const booksSelect = $('#books');
+            booksSelect.empty(); // Clear previous options
+            booksSelect.append(new Option("Select a book", "")); // Placeholder option
+            response.books.forEach(book => {
+              booksSelect.append(new Option(book.title, book._id));
+            });
+          },
+          error: function () {
+            iziToast.error({
+              title: "Error",
+              message: "Failed to load books. Please try again.",
+              position: "topRight",
+            });
+          }
+        });
+      }
+  
+      // Add Quantity Input for Selected Book
+      $('#books').change(function () {
+        const selectedBookId = $(this).val();
+  
+        // Clear any previously added quantity fields
+        $('#bookQuantityFields').empty();
+  
+        if (selectedBookId) {
+          // Add a quantity input field for the selected book
+          const quantityField = `
+            <div id="quantityField_${selectedBookId}" class="form-group" style="margin-top: 10px;">
+                <label for="quantity_${selectedBookId}">Enter Quantity</label>
+                <input type="number" class="form-control" id="quantity_${selectedBookId}" name="quantity_${selectedBookId}" placeholder="Enter quantity" min="1">
+            </div>`;
+          $('#bookQuantityFields').append(quantityField);
+          $('#bookQuantityFields').show();
+        }
+      });
+  
+      // Track added books and their quantities
+      let selectedBooks = {};
+  
+      // Add Book to Table
+      $('#addBook').click(function () {
+        const selectedBookId = $('#books').val();
+        const quantity = $(`#quantity_${selectedBookId}`).val();
+  
+        if (!quantity || quantity <= 0) {
+          iziToast.error({
+            title: "Error",
+            message: "Please select a valid quantity.",
+            position: "topRight",
+          });
+          return;
+        }
+  
+        const bookTitle = $('#books option:selected').text();
+  
+        // Check if the book is already in the list
+        if (selectedBooks[selectedBookId]) {
+          selectedBooks[selectedBookId].quantity += parseInt(quantity);
+          $(`#bookTableRow_${selectedBookId}`).find('.book-quantity').text(selectedBooks[selectedBookId].quantity);
+        } else {
+          // Add new book to the list
+          selectedBooks[selectedBookId] = { title: bookTitle, quantity: parseInt(quantity) };
+          const tableRow = `<tr id="bookTableRow_${selectedBookId}">
+                              <td>${bookTitle}</td>
+                              <td class="book-quantity">${quantity}</td>
+                              <td><button type="button" class="btn btn-danger removeBook" data-id="${selectedBookId}">Remove</button></td>
+                            </tr>`;
+          $('#selectedBooksTable tbody').append(tableRow);
+        }
+  
+        // Clear the quantity field and reset book selection
+        $(`#quantity_${selectedBookId}`).val('');
+        $('#bookQuantityFields').hide();
+        $('select#books').val('');
+      });
+  
+      // Remove Book from Table and Update selectedBooks
+      $(document).on('click', '.removeBook', function () {
+        const bookId = $(this).data('id');
+        delete selectedBooks[bookId];
+        $(`#bookTableRow_${bookId}`).remove();
+      });
+  
       // Handle form submission via AJAX
       $("#createPaymentForm").submit(function (e) {
-        e.preventDefault(); // Prevent the default form submission
+        e.preventDefault(); // Prevent default form submission
   
-        const formData = $(this).serialize(); // Serialize form data
+        // Prepare the data payload
+        const payload = {
+          cnic: $('#cnic').val(),
+          amount: $('#amount').val(),
+          dueDate: $('#dueDate').val(),
+          paymentType: $('input[name="paymentType"]:checked').val(),
+          books: Object.keys(selectedBooks), // Array of book IDs
+          quantities: Object.fromEntries(
+            Object.entries(selectedBooks).map(([id, data]) => [id, data.quantity])
+          ) // Object with book IDs and their quantities
+        };
   
+        // Debugging logs
+        console.log('Payload being sent:', payload);
+  
+        // Send AJAX request
         $.ajax({
           type: "POST",
-          url: "/challans/create", // The route for creating challans
-          data: formData,
-          dataType: "json",
+          url: "/payments/create", // Update to your create payment route
+          data: JSON.stringify(payload),
+          contentType: "application/json", // Set appropriate content type
           success: function (response) {
             if (response.status === "success") {
-              // Show success message using Izitoast
               iziToast.success({
                 title: "Success",
                 message: response.message,
                 position: "topRight",
               });
-  
-              // Redirect to the challan details page after 2 seconds
               setTimeout(function () {
-                window.location.href = `/challan/${response.challanNo}`;
+                window.location.href = `/challan/${response.paymentId}`;
               }, 2000);
             } else {
-              // Show error message using Izitoast
               iziToast.error({
                 title: "Error",
                 message: response.message,
@@ -121,12 +325,11 @@
               message: errorMessage,
               position: "topRight",
             });
-          },
+          }
         });
       });
     });
   </script>
-  
 
 </body>
 

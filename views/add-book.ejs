@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title><%= editing ? 'Edit Book' : 'Add Book' %></title>
+
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="/asset/admin/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.css">
+  <link rel="stylesheet" href="/asset/admin/css/style.css">
+  <link rel="stylesheet" href="/asset/admin/css/components.css">
+  <link rel="stylesheet" href="/asset/admin/css/custom.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="main-wrapper">
+      <!-- Navbar -->
+      <%- include('components/navbar') %>
+      <!-- Sidebar -->
+      <%- include('components/sidebar', { dashboard: false, users: false, payments: false, books: true }) %>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <section class="section">
+          <div class="section-header">
+            <h1><%= editing ? 'Edit Book' : 'Add Book' %></h1>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="title">Book Title</label>
+                      <input type="text" class="form-control" id="title" name="title" placeholder="Title of Book" value="<%= editing ? book.title : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="grade">Class</label>
+                      <input type="text" class="form-control" id="grade" name="grade" placeholder="Enter Class" value="<%= editing ? book.grade : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="isbn">ISBN</label>
+                      <input type="text" class="form-control" id="isbn" name="isbn" placeholder="International Standard Book Number" value="<%= editing ? book.isbn : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="price">Price</label>
+                      <input type="number" class="form-control" id="price" name="price" placeholder="Price of Book" value="<%= editing ? book.price : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="category">Category</label>
+                      <input type="text" class="form-control" id="category" name="category" placeholder="Enter Category" value="<%= editing ? book.category : '' %>" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="quantity">Quantity</label>
+                      <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Current Stock" value="<%= editing ? book.quantity : '' %>" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                      <%= editing ? 'Update Book' : 'Add Book' %>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- General JS Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/asset/admin/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6/jquery.nicescroll.min.js"></script>
+  <script src="/asset/admin/js/scripts.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Form submission event
+      $("form").submit(function (e) {
+        e.preventDefault(); // Prevent the default form submission
+  
+        // Serialize the form data
+        const formData = $(this).serialize();
+  
+        // Determine the route based on editing mode
+        const isEditing = <%= editing ? 'true' : 'false' %>; // Use the server-side `editing` variable
+        const url = isEditing ? `/books/edit/<%= book._id %>` : '/books/add';
+  
+        $.ajax({
+          type: "POST",
+          url: url, // Dynamic URL based on editing mode
+          data: formData,
+          dataType: "json",
+          success: function (response) {
+            if (response.status === 'success') {
+              // Show success message using Izitoast
+              iziToast.success({
+                title: 'Success',
+                message: response.message,
+                position: 'topRight',
+              });
+  
+              // Redirect to the books page after 2 seconds
+              setTimeout(function () {
+                window.location.href = '/books';
+              }, 2000);
+            }
+          },
+          error: function (xhr, status, error) {
+            if (xhr.responseJSON && xhr.responseJSON.status === 'error') {
+              // Show specific error message
+              iziToast.error({
+                title: 'Error',
+                message: xhr.responseJSON.message,
+                position: 'topRight',
+              });
+            } else {
+              // Show a general error message
+              iziToast.error({
+                title: 'Error',
+                message: 'Internal server error.',
+                position: 'topRight',
+              });
+            }
+          },
+        });
+      });
+    });
+  </script>
+  
+</body>
+
+</html>

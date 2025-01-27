@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
+  <title>Pending Challans</title>
+
+  <!-- General CSS Files -->
+  <link rel="stylesheet" href="/asset/admin/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.css">
+  <link rel="stylesheet" href="/asset/admin/css/style.css">
+  <link rel="stylesheet" href="/asset/admin/css/components.css">
+  <link rel="stylesheet" href="/asset/admin/css/custom.css">
+
+</head>
+
+<body>
+    <div id="app">
+        <div class="main-wrapper">
+    
+          <!-- Navbar -->
+          <%- include('components/navbar') %>
+          <!-- Sidebar -->
+          <%- include('components/sidebar', { dashboard: false, users: false, payments: true }) %>
+    
+          <!-- Main Content -->
+          <div class="main-content">
+            <section class="section">
+              <div class="section-header">
+                <h1>Pending Challans</h1>
+              </div>
+    
+              <div class="row">
+                <div class="col-12 col-md-12 col-lg-12">
+                  <div class="card">
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table class="table table-striped" id="challansTable">
+                          <thead>
+                            <tr>
+                              <th>Sl</th>
+                              <th>Challan No</th>
+                              <th>Full Name</th>
+                              <th>School Name</th>
+                              <th>Amount (PKR)</th>
+                              <th>Due Date</th>
+                              <th>Status</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% challans.forEach((challan, index) => { %>
+                            <tr>
+                              <td><%= index + 1 %></td>
+                              <td><%= challan.challanNo %></td>
+                              <td><%= challan.fullName %></td>
+                              <td><%= challan.schoolName %></td>
+                              <td><%= challan.amount.toLocaleString() %></td>
+                              <td><%= new Date(challan.dueDate).toDateString() %></td>
+                              <td><span class="badge badge-warning">Pending</span></td>
+                              <td>
+                                <a href="/challan/<%= challan.challanNo %>" class="btn btn-primary btn-sm">View</a>
+                              </td>
+                            </tr>
+                            <% }) %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+    
+        </div>
+    </div>
+    
+  <!-- General JS Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/asset/admin/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6/jquery.nicescroll.min.js"></script>
+  <script src="/asset/admin/js/scripts.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Add any interactivity if needed, e.g., handling button clicks.
+    });
+  </script>
+
+</body>
+
+</html>

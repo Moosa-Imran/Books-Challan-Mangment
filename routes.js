@@ -1,12 +1,12 @@
 const express = require('express');
 const path = require('path');
-const { ObjectId } = require('mongodb'); 
+const { ObjectId } = require('mongodb');
 const nodemailer = require('nodemailer');;
 const router = express.Router();
 const emailTemplates = require('./emailTemplates');
 const dotenv = require('dotenv');
 
-dotenv.config(); 
+dotenv.config();
 
 
 // Protected Route Middleware
@@ -21,7 +21,7 @@ function isAuthenticated(req, res, next) {
 // Create a transporter using Namecheap SMTP settings
 const transporter = nodemailer.createTransport({
     host: "smtp.privateemail.com",
-    port: 587, 
+    port: 587,
     secure: false, // Set to true if using port 465
     auth: {
         user: process.env.EMAIL, // Email from your .env file
@@ -117,12 +117,12 @@ router.delete('/users/delete/:id', async (req, res) => {
 });
 
 // Create Challan Route
-router.post('/challans/create', async (req, res) => {
-    const { cnic, amount, dueDate } = req.body;
-    const managmentDb = req.app.locals.managmentDb; // Access the database
+router.post('/payments/create', async (req, res) => {
+    const { cnic, amount, dueDate, paymentType, books, quantities } = req.body;
+    console.log(req.body);
+    const managmentDb = req.app.locals.managmentDb;
 
     try {
-        // Step 1: Check if the user exists in the Customers collection by CNIC
         const user = await managmentDb.collection('Customers').findOne({ cnic });
         if (!user) {
             return res.status(404).json({
@@ -131,38 +131,152 @@ router.post('/challans/create', async (req, res) => {
             });
         }
 
-        // Step 2: Generate a unique Challan No with 8-10 digits
-        const challanNo = Math.floor(10000000 + Math.random() * 900000000); // Generates an 8-9 digit number
+        let totalAmount = 0;
+        if (paymentType === 'manual') {
+            totalAmount = parseFloat(amount);
+        } else {
+            for (const bookId of books) {
+                const book = await managmentDb.collection('Books').findOne({ _id: new ObjectId(bookId) });
+                if (!book) {
+                    return res.status(404).json({
+                        status: 'error',
+                        message: `Book with ID ${bookId} not found.`,
+                    });
+                }
+                totalAmount += book.price * quantities[bookId]; // Assuming each book has a price
 
-        // Step 3: Create a new challan object
+                // Subtract the quantity from the book stock
+                await managmentDb.collection('Books').updateOne(
+                    { _id: new ObjectId(bookId) },
+                    { $inc: { quantity: -quantities[bookId] } }
+                );
+            }
+        }
+
+        const challanNo = Math.floor(10000000 + Math.random() * 900000000);
         const challanData = {
             challanNo,
             cnic,
-            fullName: user.fullName, // User's full name from the database
-            schoolName: user.schoolName, // User's school name from the database
-            amount: parseFloat(amount), // Convert amount to a number
-            dueDate: new Date(dueDate), // Ensure dueDate is stored as a Date object
-            createdAt: new Date(), // Timestamp for when the challan is created
-            status: 'unpaid', // Default status for new challans
+            fullName: user.fullName,
+            schoolName: user.schoolName,
+            amount: totalAmount,
+            dueDate: new Date(dueDate),
+            createdAt: new Date(),
+            status: 'unpaid',
+            paymentType,
+            books,
+            quantities
         };
 
-        // Step 4: Insert the new challan into the Challans collection
         await managmentDb.collection('Challans').insertOne(challanData);
 
-        // Step 5: Respond with success and the generated Challan No
-        return res.status(200).json({
+        res.status(200).json({
             status: 'success',
             message: 'Challan created successfully.',
-            challanNo,
+            paymentId: challanNo
         });
     } catch (error) {
         console.error('Error creating challan:', error);
+        res.status(500).json({ status: 'error', message: 'Internal server error.' });
+    }
+});
 
-        // Handle server errors
-        return res.status(500).json({
-            status: 'error',
-            message: 'Internal server error. Please try again later.',
+  
+// Route to fetch the list of books
+router.get('/fetchBooks', async (req, res) => {
+    const managmentDb = req.app.locals.managmentDb;
+    try {
+        const books = await managmentDb.collection('Books').find().toArray();
+        res.status(200).json({
+            status: 'success',
+            books: books,
         });
+    } catch (error) {
+        console.error('Error fetching books:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch books.',
+        });
+    }
+});
+
+// POST Route: Handle form submission to add a new book
+router.post('/books/add', isAuthenticated, async (req, res) => {
+    const managementDb = req.app.locals.managmentDb; // Get the database reference
+
+    const { title, grade, isbn, price, category, quantity } = req.body;
+
+    try {
+        // Check if the ISBN already exists
+        const existingBook = await managementDb.collection('Books').findOne({ isbn });
+        if (existingBook) {
+            return res.status(400).json({ status: 'error', message: 'ISBN already exists.' });
+        }
+
+        // Insert the book into the database
+        await managementDb.collection('Books').insertOne({
+            title,
+            grade,
+            isbn,
+            price: parseFloat(price), // Convert price to a number
+            category,
+            quantity: parseInt(quantity), // Convert quantity to an integer
+            createdAt: new Date() // Add a timestamp
+        });
+
+        // Send success response
+        res.status(200).json({ status: 'success', message: 'Book added successfully!' });
+    } catch (error) {
+        console.error('Error adding book:', error);
+        // Send error response
+        res.status(500).json({ status: 'error', message: 'Internal server error' });
+    }
+});
+
+// DELETE Route: Handle deleting a book
+router.delete('/books/delete/:id', isAuthenticated, async (req, res) => {
+    const managementDb = req.app.locals.managmentDb; // Get the database reference
+    const { id } = req.params;
+
+    try {
+        // Delete the book by its ID
+        await managementDb.collection('Books').deleteOne({ _id: new ObjectId(id) });
+
+        res.json({ success: true, message: 'Book deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting book:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// POST Route: Update a book
+router.post('/books/edit/:id', isAuthenticated, async (req, res) => {
+    const managementDb = req.app.locals.managmentDb;
+    const { id } = req.params;
+    const { title, grade, isbn, price, category, quantity } = req.body;
+
+    try {
+        // Update the book in the database
+        await managementDb.collection('Books').updateOne(
+            { _id: new ObjectId(id) },
+            {
+                $set: {
+                    title,
+                    grade,
+                    isbn,
+                    price: parseFloat(price),
+                    category,
+                    quantity: parseInt(quantity),
+                    updatedAt: new Date(),
+                },
+            }
+        );
+
+        // Send success response
+        res.status(200).json({ status: 'success', message: 'Book updated successfully!' });
+    } catch (error) {
+        console.error('Error updating book:', error);
+        res.status(500).send('Internal server error');
     }
 });
 
@@ -173,15 +287,15 @@ router.post('/login', async (req, res) => {
     const managmentDb = req.app.locals.managmentDb;
     try {
         // Search for the user by username or email
-        const user = await managmentDb.collection('Admins').findOne({username: username});
+        const user = await managmentDb.collection('Admins').findOne({ username: username });
 
         // If user is not found
         if (!user) {
-            return res.status(401).json({status: 'invalid', message: 'Invalid username.' });
+            return res.status(401).json({ status: 'invalid', message: 'Invalid username.' });
         }
 
         if (user.password !== password) {
-            return res.status(401).json({status: 'incorrect', message: 'Incorrect password.' });
+            return res.status(401).json({ status: 'incorrect', message: 'Incorrect password.' });
         }
 
         // If valid, store user session and create cookie
@@ -191,10 +305,10 @@ router.post('/login', async (req, res) => {
         };
 
         // Send success response
-        res.status(200).json({status: 'success', message: 'Login successful!' });
+        res.status(200).json({ status: 'success', message: 'Login successful!' });
     } catch (error) {
         console.error('Error during login:', error);
-        res.status(500).json({status: 'error',  message: 'Internal server error' });
+        res.status(500).json({ status: 'error', message: 'Internal server error' });
     }
 });
 
@@ -204,7 +318,7 @@ router.post('/logout', (req, res) => {
         if (err) {
             return res.status(500).json({ message: 'Logout failed. Please try again later.' });
         }
-        res.clearCookie('connect.sid'); 
+        res.clearCookie('connect.sid');
         res.status(200).json({ message: 'Logout successful!' });
     });
 });
@@ -213,21 +327,60 @@ router.post('/logout', (req, res) => {
 
 // Routes for rendering EJS pages
 
-router.get('/dashboard', isAuthenticated, (req, res) => {
-    const mockData = {
-        totalPayments: 5000,
-        pendingPayments: 1500,
-        paidAmount: 3500,
-        totalUsers: 100,
-        activeUsers: 85,
-        deactivatedUsers: 15,
-    };
+// Dashboard Route
+router.get('/dashboard', isAuthenticated, async (req, res) => {
+    const managmentDb = req.app.locals.managmentDb;
+    try {
+        // Fetch total number of customers
+        const totalCustomers = await managmentDb.collection('Customers').countDocuments();
+        // Fetch total number of books
+        const totalBooks = await managmentDb.collection('Books').countDocuments();
+        // Fetch total number of challans
+        const totalChallans = await managmentDb.collection('Challans').countDocuments();
+        // Fetch total fees collected
+        const totalFeesCollectedResult = await managmentDb.collection('Challans').aggregate([
+            {
+                $match: { status: 'paid' }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]).toArray();
 
-    res.render('dashboard', mockData);
+        const totalFeesCollected = totalFeesCollectedResult.length > 0 ? totalFeesCollectedResult[0].total : 0;
+        // Fetch pending fees
+        const pendingFeesResult = await managmentDb.collection('Challans').aggregate([
+            {
+                $match: { status: 'unpaid' }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]).toArray();
+        const pendingFees = pendingFeesResult.length > 0 ? pendingFeesResult[0].total : 0;
+        // Render dashboard page with the data
+        res.render('dashboard', {
+            totalCustomers,
+            totalBooks,
+            totalChallans,
+            totalFeesCollected,
+            pendingFees
+        });
+    } catch (err) {
+        console.error("Error loading dashboard:", err);
+        res.status(500).send("Server error");
+    }
 });
 
+
 router.get('/users', isAuthenticated, async (req, res) => {
-    const managmentDb = req.app.locals.managmentDb; 
+    const managmentDb = req.app.locals.managmentDb;
 
     try {
         // Fetch all users from the database
@@ -246,7 +399,7 @@ router.get('/users/add', isAuthenticated, (req, res) => {
 });
 
 router.get('/payments/create', isAuthenticated, (req, res) => {
-    res.render('create-payment'); 
+    res.render('create-payment');
 });
 
 router.get('/challan/:id', isAuthenticated, async (req, res) => {
@@ -256,7 +409,7 @@ router.get('/challan/:id', isAuthenticated, async (req, res) => {
     try {
         // Find the challan by ID
         const challanNo = Number(id);
-        const challan = await managmentDb.collection('Challans').findOne({ challanNo});
+        const challan = await managmentDb.collection('Challans').findOne({ challanNo });
 
         if (!challan) {
             return res.status(404).send('Challan not found');
@@ -266,6 +419,75 @@ router.get('/challan/:id', isAuthenticated, async (req, res) => {
         res.render('view-challan', { challan });
     } catch (error) {
         console.error('Error fetching challan:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.get('/payments/pending', isAuthenticated, async (req, res) => {
+    const managmentDb = req.app.locals.managmentDb;
+
+    try {
+        const pendingChallans = await managmentDb.collection('Challans').find({ status: 'unpaid' }).toArray();
+
+        res.render('pending-challans', { challans: pendingChallans });
+    } catch (error) {
+        console.error('Error fetching pending challans:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.get('/payments/accepted', isAuthenticated, async (req, res) => {
+    const managmentDb = req.app.locals.managmentDb;
+
+    try {
+        const acceptedChallans = await managmentDb.collection('Challans').find({ status: 'paid' }).toArray();
+
+        res.render('accepted-challans', { challans: acceptedChallans });
+    } catch (error) {
+        console.error('Error fetching accepted challans:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// GET Route: Display the Add Book page
+router.get('/books/add', isAuthenticated, (req, res) => {
+    // Render the add-book page with default empty values and the `editing` flag set to false
+    res.render('add-book', { book: {}, editing: false });
+});
+
+// GET Route: Display all books
+router.get('/books', isAuthenticated, async (req, res) => {
+    const managementDb = req.app.locals.managmentDb; // Get the database reference
+
+    try {
+        // Fetch all books from the database
+        const books = await managementDb.collection('Books').find().toArray();
+
+        // Render the books page with the retrieved data
+        res.render('books', { books });
+    } catch (error) {
+        console.error('Error fetching books:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// GET Route: Edit a book (renders the edit form with pre-filled values)
+router.get('/books/edit/:id', isAuthenticated, async (req, res) => {
+    const managementDb = req.app.locals.managmentDb;
+    const { id } = req.params;
+
+    try {
+        // Find the book by its ID
+        const book = await managementDb.collection('Books').findOne({ _id: new ObjectId(id) });
+
+        if (!book) {
+            return res.status(404).send('Book not found');
+        }
+
+        // Render the add-book page with pre-filled data and a flag for editing
+        res.render('add-book', { book, editing: true });
+    } catch (error) {
+        console.error('Error fetching book for editing:', error);
         res.status(500).send('Internal server error');
     }
 });

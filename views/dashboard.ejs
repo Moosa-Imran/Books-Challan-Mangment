@@ -13,8 +13,6 @@
   <link rel="stylesheet" href="asset/admin/css/style.css">
   <link rel="stylesheet" href="asset/admin/css/components.css">
   <link rel="stylesheet" href="asset/admin/css/custom.css">
-
-
 </head>
 
 <body>
@@ -25,104 +23,88 @@
       <!-- Navbar -->
       <%- include('components/navbar') %>
       <!-- Sidebar -->
-      <%- include('components/sidebar', { dashboard: true, users: false, payments: false, }) %>
+      <%- include('components/sidebar', { dashboard: true, users: false, books: false, payments: false }) %>
 
       <div class="main-content">
         <section class="section">
-          <div class="section-header pl-0 d-flex justify-content-between">
-            <h1 class="pl-0">Dashboard</h1>
-            <h4></h4>
+          <div class="section-header d-flex justify-content-between">
+            <h1>Dashboard</h1>
           </div>
 
           <div class="row">
-            <!-- Total Payments -->
+            <!-- Total Customers -->
             <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
               <div class="card-stat gr-bg-1">
                 <div class="icon">
-                  <i class="fas fa-money-bill-wave-alt"></i>
+                  <i class="fas fa-user"></i>
                 </div>
                 <div class="content">
-                  <p class="caption">Total Payments</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= totalPayments %>
-                    </span> $</h4>
+                  <p class="caption">Total Customers</p>
+                  <h4 class="card-stat-amount"><span><%= totalCustomers %></span></h4>
                 </div>
               </div>
             </div>
 
-            <!-- Total Pending Payments -->
-            <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
-              <div class="card-stat gr-bg-2">
-                <div class="icon">
-                  <i class="fas fa-spinner"></i>
-                </div>
-                <div class="content">
-                  <p class="caption">Total Pending Payments</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= pendingPayments %>
-                    </span> $</h4>
-                </div>
-              </div>
-            </div>
-
-            <!-- Total Paid Amount -->
+            <!-- Total Books -->
             <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
               <div class="card-stat gr-bg-3">
                 <div class="icon">
-                  <i class="fas fa-spinner"></i>
+                  <i class="fas fa-book"></i>
                 </div>
                 <div class="content">
-                  <p class="caption">Total Paid Amount</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= paidAmount %>
-                    </span> $</h4>
+                  <p class="caption">Total Books</p>
+                  <h4 class="card-stat-amount"><span><%= totalBooks %></span></h4>
                 </div>
               </div>
             </div>
 
-            <!-- Total Users -->
+            <!-- Total Challans Generated -->
             <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
               <div class="card-stat gr-bg-4">
                 <div class="icon">
-                  <i class="far fa-user"></i>
+                  <i class="fas fa-receipt"></i>
                 </div>
                 <div class="content">
-                  <p class="caption">Total Users</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= totalUsers %>
-                    </span></h4>
+                  <p class="caption">Total Challans</p>
+                  <h4 class="card-stat-amount"><span><%= totalChallans %></span></h4>
                 </div>
               </div>
             </div>
 
-            <!-- Total Active Users -->
+            <!-- Total Fees Collected -->
             <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
               <div class="card-stat gr-bg-5">
                 <div class="icon">
-                  <i class="fas fa-user-tie"></i>
+                  <i class="fas fa-dollar-sign"></i>
                 </div>
                 <div class="content">
-                  <p class="caption">Total Active Users</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= activeUsers %>
-                    </span></h4>
+                  <p class="caption">Fees Collected</p>
+                  <h4 class="card-stat-amount"><span><%= totalFeesCollected %></span> PKR</h4>
                 </div>
               </div>
             </div>
 
-            <!-- Total Deactivated Users -->
+            <!-- Pending Fees -->
             <div class="custom-xxxl-3 custom-xxl-4 col-md-6 col-sm-6 col-12 mb-4">
               <div class="card-stat gr-bg-6">
                 <div class="icon">
-                  <i class="fas fa-user-times"></i>
+                  <i class="fas fa-exclamation-circle"></i>
                 </div>
                 <div class="content">
-                  <p class="caption">Total Deactivated Users</p>
-                  <h4 class="card-stat-amount"><span>
-                      <%= deactivatedUsers %>
-                    </span></h4>
+                  <p class="caption">Pending Fees</p>
+                  <h4 class="card-stat-amount"><span><%= pendingFees %></span> PKR</h4>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="row mt-4">
+            <div class="col-md-6 col-sm-12">
+              <a href="/users/add" class="btn btn-primary btn-block"><i class="fas fa-user-plus"></i> Add User</a>
+            </div>
+            <div class="col-md-6 col-sm-12">
+              <a href="/payments/create" class="btn btn-success btn-block"><i class="fas fa-file-invoice-dollar"></i> Create Challan</a>
             </div>
           </div>
         </section>
@@ -137,8 +119,6 @@
   <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6/jquery.nicescroll.min.js"></script>
   <script src="asset/admin/js/scripts.js"></script>
-
-
 </body>
 
 </html>
