@@ -407,7 +407,7 @@ router.get('/challan/:id', isAuthenticated, async (req, res) => {
     const managmentDb = req.app.locals.managmentDb;
 
     try {
-        // Find the challan by ID
+        // Find the challan by challanNo
         const challanNo = Number(id);
         const challan = await managmentDb.collection('Challans').findOne({ challanNo });
 
@@ -415,8 +415,34 @@ router.get('/challan/:id', isAuthenticated, async (req, res) => {
             return res.status(404).send('Challan not found');
         }
 
-        // Render the view-challan.ejs template with the challan data
-        res.render('view-challan', { challan });
+        let totalAmount = challan.amount; // Default to challan amount (for manual payments)
+        let bookDetails = [];
+
+        if (challan.paymentType === 'create' && challan.books.length > 0) {
+            const bookIds = challan.books.map(id => new ObjectId(id));
+
+            // Fetch book details
+            const books = await managmentDb.collection('Books').find({ _id: { $in: bookIds } }).toArray();
+
+            // Calculate total amount and prepare book details
+            totalAmount = 0;
+            bookDetails = books.map(book => {
+                const quantity = challan.quantities[book._id.toString()] || 0;
+                const price = book.price || 0;
+                const subtotal = quantity * price;
+                totalAmount += subtotal;
+
+                return {
+                    title: book.title,
+                    quantity,
+                    price,
+                    subtotal
+                };
+            });
+        }
+
+        // Render the view
+        res.render('view-challan', { challan, bookDetails, totalAmount });
     } catch (error) {
         console.error('Error fetching challan:', error);
         res.status(500).send('Internal server error');

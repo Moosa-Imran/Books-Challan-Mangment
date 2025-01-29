@@ -6,66 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Challan</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: "Open Sans", sans-serif;
-        }
-        .column {
-            float: left;
-            width: 33.33%;
-            padding: 10px;
-            border-right: 1px dotted #000;
-            height: auto;
-        }
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-        .d-flex {
-            display: flex;
-        }
-        .flex-col {
-            flex-direction: column;
-        }
-        .justify-content-between {
-            justify-content: space-between;
-        }
-        .justify-content-center {
-            justify-content: center;
-        }
-        .circle-logo {
-            width: 60px;
-        }
-        .logo {
-            width: 220px;
-        }
-        .title {
-            margin-top: 5px;
-        }
-        .bar-code {
-            width: 200px;
-            align-self: center;
-            margin-top: 5px;
-            margin-bottom: 10px;
-        }
-        table {
-            margin-top: 10px;
-            border: 1px solid #ccc;
-            border-collapse: collapse;
-            width: 100%;
-            table-layout: fixed;
-        }
-        table th, table td {
-            padding: .625em;
-            border: 1px solid #000;
-            text-align: left;
-        }
-        hr {
-            border-top: 1px solid #000;
-        }
+        * { box-sizing: border-box; }
+        body { font-family: "Open Sans", sans-serif; }
+        .column { float: left; width: 33.33%; padding: 10px; border-right: 1px dotted #000; height: auto; }
+        .row:after { content: ""; display: table; clear: both; }
+        .d-flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .justify-content-between { justify-content: space-between; }
+        .justify-content-center { justify-content: center; }
+        .bar-code { width: 200px; align-self: center; margin: 5px 0 10px; }
+        table { margin-top: 10px; border: 1px solid #ccc; border-collapse: collapse; width: 100%; table-layout: fixed; }
+        table th, table td { padding: .625em; border: 1px solid #000; text-align: left; }
+        hr { border-top: 1px solid #000; }
     </style>
 </head>
 <body>
@@ -101,22 +53,34 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="2">Payment for <%= challan.schoolName %></td>
-                        <td>PKR <%= challan.amount.toLocaleString() %></td>
-                    </tr>
+                    <% if (challan.paymentType === "manual") { %>
+                        <tr>
+                            <td colspan="2">Payment for <%= challan.schoolName %></td>
+                            <td>PKR <%= challan.amount.toLocaleString() %></td>
+                        </tr>
+                    <% } else { %>
+                        <% bookDetails.forEach(book => { %>
+                            <tr>
+                                <td><%= book.title %></td>
+                                <td>Qty: <%= book.quantity %> x PKR <%= book.price.toLocaleString() %></td>
+                                <td>PKR <%= book.subtotal.toLocaleString() %></td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
                 </tbody>
+                
             </table>
             <hr />
             <div class="d-flex justify-content-between">
                 <strong>Payable by due date</strong>
-                <span>PKR <%= challan.amount.toLocaleString() %></span>
+                <span>PKR <%= totalAmount.toLocaleString() %></span>
             </div>
             <hr />
             <div class="d-flex justify-content-between">
                 <strong>Payable after due date</strong>
-                <span>PKR <%= (challan.amount + 50).toLocaleString() %></span>
+                <span>PKR <%= (totalAmount + 50).toLocaleString() %></span>
             </div>
+            
             <br />
             <hr />
             <div class="d-flex flex-col">
